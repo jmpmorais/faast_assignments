@@ -17,4 +17,7 @@ jobs:
       - name: Run tests
         run: pytest --cov=life_expectancy
       - name: Run pylint
-        run: pylint life_expectancy.cleaning
+        run: |
+          pylint life_expectancy.main
+          pylint life_expectancy.data_loading
+          pylint life_expectancy.clean_data
