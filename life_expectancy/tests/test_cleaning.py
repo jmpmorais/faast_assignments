@@ -43,5 +43,3 @@ def test_save_data(mock_to_csv, pt_life_expectancy_expected):
     """Test save_data function"""
     save_data(pt_life_expectancy_expected, PT_FILE_PATH)
     mock_to_csv.assert_called_with(PT_FILE_PATH, index=False)
-
-
