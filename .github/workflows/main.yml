@@ -19,5 +19,5 @@ jobs:
       - name: Run pylint
         run: |
           pylint life_expectancy.main
-          pylint life_expectancy.data_loading
+          pylint life_expectancy.load_data
           pylint life_expectancy.clean_data
