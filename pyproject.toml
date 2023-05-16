@@ -20,5 +20,10 @@ omit = [
     "*/conftest.py", "*/test*", # omit test files
 ]
 
+[tool.pylint."messages control"] 
+disable = [
+"too-few-public-methods"
+]
+
 [tool.coverage.report]
 fail_under = 80
