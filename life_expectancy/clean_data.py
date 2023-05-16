@@ -1,40 +1,63 @@
-""" Cleaning Script """
+"""Script to clean data"""
 
+from abc import ABC, abstractmethod
 import pandas as pd
+from life_expectancy.region import Region
 
-def clean_data(initial_df: pd.DataFrame, region: str = 'PT') -> pd.DataFrame:
-    """
-    Function used to clean data.
-    Args:
-        initial_df [pd.DataFrame]: The initial dataframe that is going to be cleaned.
-        region [str]: Region to be selected from the dataframe.
-    Returns:
-        [pd.DataFrame]: Data cleaned and filtered by region.
-    """
+class CleaningData(ABC):
+    """Abstract class for cleaning data"""
 
-    copy_initial_df = initial_df.copy()
+    @abstractmethod
+    def clean_data(self, df_data: pd.DataFrame, country: Region) -> pd.DataFrame:
+        """Abstract method to clean the data"""
 
-    initial_columns = copy_initial_df.columns[0]
+class CleanTSV(CleaningData):
+    """Class to clean data coming from a .tsv file"""
 
-    new_columns = copy_initial_df.columns[0].split(',')
+    def clean_data(self, df_data: pd.DataFrame, country: Region) -> pd.DataFrame:
+        """Cleans data"""
+        df_copy = df_data.copy()
 
-    copy_initial_df[new_columns] = copy_initial_df[initial_columns].str.split(',', expand=True)
+        # Splitting the name of the first column by ','
+        new_cols = df_copy.columns[0].split(',')
 
-    copy_initial_df = copy_initial_df.drop(columns=initial_columns)
+        # Splitting the data of the first column and dropping the column with a bad format
+        df_copy[new_cols] = df_copy[df_copy.columns[0]].str.split(',', expand=True)
 
-    pivoted_df = copy_initial_df.melt(
-                new_columns,
-                var_name='year',
-                value_name='value'
-                )
+        df_copy.drop(df_copy.columns[0], axis = 1, inplace = True)
 
-    pivoted_df = pivoted_df.rename(columns={pivoted_df.columns[3]: 'region'})
+        # Creating a table with unit,sex,age,region,year,value as columns
+        df_melt = df_copy.melt(id_vars = new_cols, var_name = 'year', value_name = 'value')
 
-    pivoted_df['year'] = pivoted_df['year'].astype('int')
+        df_melt.rename(columns={'geo\\time': 'region'}, inplace=True)
 
-    pivoted_df['value'] = (pivoted_df['value'].str.extract(r'(\d+\.?\d*)').astype(float))
-    pivoted_df = pivoted_df.dropna(subset=['value'])
+        df_melt['year'] = df_melt['year'].astype(int)
 
-    pivoted_df = pivoted_df[pivoted_df['region']==region]
+        # allowing only floats as values to 'value' column
+        df_melt['value'] = (df_melt['value'].str.extract(r'(\d+\.?\d*)').astype(float))
 
-    return pivoted_df
+        df_melt.dropna(subset=['value'], inplace = True)
+
+        # filtering by the desired country
+        dataframe = df_melt[df_melt['region'] == country.value]
+
+        return dataframe
+
+class CleanJSON(CleaningData):
+    """Class to clean data coming from a .json file"""
+
+    def clean_data(self, df_data: pd.DataFrame, country: Region) -> pd.DataFrame:
+        """Cleans data"""
+        df_copy = df_data.copy()
+
+        # Drop columns that are not in the list we want
+        df_copy = df_copy.drop(columns='flag', axis = 1)
+        df_copy = df_copy.drop(columns='flag_detail', axis = 1)
+
+        # Rename columns
+        df_copy = df_copy.rename(columns={'country': 'region', 'life_expectancy': 'value'})
+
+        # Filter by region
+        dataframe = df_copy[df_copy['region'] == country.value]
+
+        return dataframe
