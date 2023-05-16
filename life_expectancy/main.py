@@ -7,7 +7,7 @@ import pathlib
 import os
 from typing import Union
 from life_expectancy import clean_data
-from life_expectancy import load_data 
+from life_expectancy import load_data
 from life_expectancy.region import Region
 
 
